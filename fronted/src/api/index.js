@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const request = axios.create({
   baseURL: '/api',
-  timeout: 30000
+  timeout: 120000  // 全局超时改为 120 秒
 })
 
 // 请求拦截器 - 添加token
@@ -88,7 +88,8 @@ export const importApi = {
     formData.append('subject_id', subjectId)
     formData.append('file', file)
     return request.post('/import/file', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 180000  // 文件导入单独设置 180 秒超时
     })
   },
   
@@ -99,7 +100,8 @@ export const importApi = {
     formData.append('subject_id', subjectId)
     formData.append('image', image)
     return request.post('/import/image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 180000  // 图片导入单独设置 180 秒超时（AI 识别需要较长时间）
     })
   },
   

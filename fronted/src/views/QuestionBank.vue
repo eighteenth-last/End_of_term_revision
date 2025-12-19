@@ -325,6 +325,11 @@ const loadQuestions = async () => {
       questions.value = allQuestions
     }
     
+    // 客户端题型过滤
+    if (filterType.value) {
+      questions.value = questions.value.filter(q => q.type === filterType.value)
+    }
+    
     // 客户端搜索过滤
     if (searchKeyword.value) {
       const keyword = searchKeyword.value.toLowerCase()

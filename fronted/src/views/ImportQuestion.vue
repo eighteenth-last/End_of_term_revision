@@ -104,6 +104,9 @@
         <n-space vertical>
           <n-progress type="line" :percentage="100" processing />
           <n-text>正在使用 AI 解析题目，请稍候...</n-text>
+          <n-alert type="warning" style="margin-top: 12px;">
+            AI 识别可能需要 30-120 秒，请耐心等待，不要关闭页面
+          </n-alert>
         </n-space>
       </n-card>
     </n-space>

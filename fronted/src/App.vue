@@ -3,88 +3,14 @@
     <n-message-provider>
       <n-dialog-provider>
         <n-notification-provider>
-          <!-- 未登录显示登录弹窗 -->
-          <div v-if="!isLoggedIn" style="height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <n-card style="width: 400px; border-radius: 12px;" :bordered="false">
-              <n-tabs v-model:value="authTab" type="segment" animated>
-                <!-- 登录标签页 -->
-                <n-tab-pane name="login" tab="登录">
-                  <n-form ref="loginFormRef" :model="loginForm" :rules="loginRules" style="margin-top: 20px;">
-                    <n-form-item path="username" label="用户名">
-                      <n-input 
-                        v-model:value="loginForm.username" 
-                        placeholder="请输入用户名"
-                        @keyup.enter="handleLogin"
-                      />
-                    </n-form-item>
-                    <n-form-item path="password" label="密码">
-                      <n-input 
-                        v-model:value="loginForm.password" 
-                        type="password" 
-                        show-password-on="click"
-                        placeholder="请输入密码"
-                        @keyup.enter="handleLogin"
-                      />
-                    </n-form-item>
-                    <n-button 
-                      type="primary" 
-                      block 
-                      :loading="loading"
-                      @click="handleLogin"
-                    >
-                      登录
-                    </n-button>
-                  </n-form>
-                </n-tab-pane>
-                
-                <!-- 注册标签页 -->
-                <n-tab-pane name="register" tab="注册">
-                  <n-form ref="registerFormRef" :model="registerForm" :rules="registerRules" style="margin-top: 20px;">
-                    <n-form-item path="username" label="用户名">
-                      <n-input 
-                        v-model:value="registerForm.username" 
-                        placeholder="3-50个字符"
-                      />
-                    </n-form-item>
-                    <n-form-item path="password" label="密码">
-                      <n-input 
-                        v-model:value="registerForm.password" 
-                        type="password" 
-                        show-password-on="click"
-                        placeholder="至少6个字符"
-                      />
-                    </n-form-item>
-                    <n-form-item path="confirmPassword" label="确认密码">
-                      <n-input 
-                        v-model:value="registerForm.confirmPassword" 
-                        type="password" 
-                        show-password-on="click"
-                        placeholder="再次输入密码"
-                        @keyup.enter="handleRegister"
-                      />
-                    </n-form-item>
-                    <n-button 
-                      type="primary" 
-                      block 
-                      :loading="loading"
-                      @click="handleRegister"
-                    >
-                      注册
-                    </n-button>
-                  </n-form>
-                </n-tab-pane>
-              </n-tabs>
-            </n-card>
-          </div>
-
-          <!-- 已登录显示主界面 -->
-          <n-layout v-else style="height: 100vh">
+          <!-- 主界面 -->
+          <n-layout style="height: 100vh">
             <n-layout-header bordered style="height: 64px; padding: 0 24px; display: flex; align-items: center;">
               <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                 <img src="./assets/logo.svg" alt="Logo" style="width: 40px; height: 40px;" />
                 <h2 style="margin: 0;">神阁卷藏</h2>
               </div>
-              <n-space>
+              <n-space v-if="isLoggedIn">
                 <n-button @click="showSystemInfo">
                   <template #icon>
                     <n-icon><information-circle-outline /></n-icon>
@@ -97,6 +23,11 @@
                     <n-icon><log-out-outline /></n-icon>
                   </template>
                   退出
+                </n-button>
+              </n-space>
+              <n-space v-else>
+                <n-button type="primary" @click="showAuthModal = true">
+                  登录 / 注册
                 </n-button>
               </n-space>
             </n-layout-header>
@@ -123,10 +54,99 @@
                 content-style="padding: 24px;"
                 :native-scrollbar="false"
               >
-                <router-view />
+                <div v-if="!isLoggedIn" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                  <n-empty description="请先登录以使用系统功能" style="margin-top: -100px;">
+                    <template #extra>
+                      <n-button type="primary" @click="showAuthModal = true">
+                        立即登录
+                      </n-button>
+                    </template>
+                  </n-empty>
+                </div>
+                <router-view v-else />
               </n-layout-content>
             </n-layout>
           </n-layout>
+
+          <!-- 登录注册弹窗 -->
+          <n-modal 
+            v-model:show="showAuthModal" 
+            :mask-closable="false"
+            :close-on-esc="false"
+            :closable="false"
+            preset="card"
+            style="width: 450px;"
+            title="欢迎使用神阁卷藏"
+          >
+            <n-tabs v-model:value="authTab" type="segment" animated>
+              <!-- 登录标签页 -->
+              <n-tab-pane name="login" tab="登录">
+                <n-form ref="loginFormRef" :model="loginForm" :rules="loginRules" style="margin-top: 20px;">
+                  <n-form-item path="username" label="用户名">
+                    <n-input 
+                      v-model:value="loginForm.username" 
+                      placeholder="请输入用户名"
+                      @keyup.enter="handleLogin"
+                    />
+                  </n-form-item>
+                  <n-form-item path="password" label="密码">
+                    <n-input 
+                      v-model:value="loginForm.password" 
+                      type="password" 
+                      show-password-on="click"
+                      placeholder="请输入密码"
+                      @keyup.enter="handleLogin"
+                    />
+                  </n-form-item>
+                  <n-button 
+                    type="primary" 
+                    block 
+                    :loading="loading"
+                    @click="handleLogin"
+                  >
+                    登录
+                  </n-button>
+                </n-form>
+              </n-tab-pane>
+              
+              <!-- 注册标签页 -->
+              <n-tab-pane name="register" tab="注册">
+                <n-form ref="registerFormRef" :model="registerForm" :rules="registerRules" style="margin-top: 20px;">
+                  <n-form-item path="username" label="用户名">
+                    <n-input 
+                      v-model:value="registerForm.username" 
+                      placeholder="3-50个字符"
+                    />
+                  </n-form-item>
+                  <n-form-item path="password" label="密码">
+                    <n-input 
+                      v-model:value="registerForm.password" 
+                      type="password" 
+                      show-password-on="click"
+                      placeholder="至少6个字符"
+                    />
+                  </n-form-item>
+                  <n-form-item path="confirmPassword" label="确认密码">
+                    <n-input 
+                      v-model:value="registerForm.confirmPassword" 
+                      type="password" 
+                      show-password-on="click"
+                      placeholder="再次输入密码"
+                      @keyup.enter="handleRegister"
+                    />
+                  </n-form-item>
+                  <n-button 
+                    type="primary" 
+                    block 
+                    :loading="loading"
+                    @click="handleRegister"
+                  >
+                    注册
+                  </n-button>
+                </n-form>
+              </n-tab-pane>
+            </n-tabs>
+          </n-modal>
         </n-notification-provider>
       </n-dialog-provider>
     </n-message-provider>
@@ -156,7 +176,9 @@ import {
   NTabPane,
   NForm,
   NFormItem,
-  NInput
+  NInput,
+  NModal,
+  NEmpty
 } from 'naive-ui'
 import {
   HomeOutline,
@@ -184,6 +206,7 @@ const isLoggedIn = ref(false)
 const currentUser = ref(null)
 const authTab = ref('login')
 const loading = ref(false)
+const showAuthModal = ref(false)
 
 // 登录表单
 const loginFormRef = ref(null)
@@ -244,6 +267,7 @@ const handleLogin = async () => {
     
     currentUser.value = response.user
     isLoggedIn.value = true
+    showAuthModal.value = false
     
     message.success('登录成功！')
   } catch (error) {
@@ -271,6 +295,7 @@ const handleRegister = async () => {
     
     currentUser.value = response.user
     isLoggedIn.value = true
+    showAuthModal.value = false
     
     message.success('注册成功！')
   } catch (error) {
@@ -287,6 +312,7 @@ const handleLogout = () => {
   localStorage.removeItem('user')
   currentUser.value = null
   isLoggedIn.value = false
+  showAuthModal.value = true
   message.info('已退出登录')
 }
 
@@ -310,11 +336,16 @@ onMounted(() => {
     try {
       currentUser.value = JSON.parse(userStr)
       isLoggedIn.value = true
+      showAuthModal.value = false
     } catch (error) {
       // 解析失败，清除数据
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      showAuthModal.value = true
     }
+  } else {
+    // 未登录，显示登录弹窗
+    showAuthModal.value = true
   }
 })
 

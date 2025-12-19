@@ -154,9 +154,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
+import { useRouter } from 'vue-router'
 import { subjectApi, questionApi, practiceApi } from '@/api'
 
 const message = useMessage()
+const router = useRouter()
 const userId = ref(1)
 const loadingSubjects = ref(false)
 const starting = ref(false)
@@ -342,11 +344,13 @@ const submitAnswers = async () => {
       answers: formattedAnswers
     })
 
-    // 提交成功后直接退出练习页面
+    // 提交成功后跳转到练习记录页面
     message.success(`提交成功！正确 ${data.correct} 题，错误 ${data.wrong} 题，准确率 ${data.accuracy}%，成绩 ${data.grade}`)
     
-    // 重置练习状态，返回配置页面
-    resetPractice()
+    // 延迟跳转，让用户看到成功提示
+    setTimeout(() => {
+      router.push('/practice-history')
+    }, 1500)
   } catch (error) {
     message.error(error.message || '提交失败')
   } finally {

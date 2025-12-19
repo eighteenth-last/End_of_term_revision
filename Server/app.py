@@ -11,7 +11,6 @@ from routers import (
     practice_router,
     error_router,
     model_router,
-    dbconfig_router,
     auth_router
 )
 
@@ -39,7 +38,6 @@ app.include_router(import_router.router)
 app.include_router(practice_router.router)
 app.include_router(error_router.router)
 app.include_router(model_router.router)
-app.include_router(dbconfig_router.router)
 
 
 @app.on_event("startup")

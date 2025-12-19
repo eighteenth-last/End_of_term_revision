@@ -214,8 +214,7 @@
             <n-collapse-item title="7️⃣ 配置设置" name="7">
               <n-space vertical>
                 <n-text>• 「AI 模型配置」：配置 OpenAI API 密钥和基础 URL</n-text>
-                <n-text>• 「数据库配置」：修改数据库连接信息</n-text>
-                <n-text depth="3">⚠️ 注意：修改配置后需要重启后端服务才能生效</n-text>
+                <n-text depth="3">⚠️ 注意：配置 API Key 后即可使用 AI 解析功能</n-text>
               </n-space>
             </n-collapse-item>
 
@@ -240,10 +239,13 @@ import { ref, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { practiceApi } from '@/api'
 import { RefreshOutline } from '@vicons/ionicons5'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const message = useMessage()
 const loading = ref(false)
-const userId = ref(1) // 实际项目中应该从登录状态获取
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 
 const stats = ref({
   today: {

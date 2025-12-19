@@ -161,10 +161,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { subjectApi, errorApi, practiceApi } from '@/api'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const message = useMessage()
 const router = useRouter()
-const userId = ref(1)
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 const loadingSubjects = ref(false)
 const starting = ref(false)
 const submitting = ref(false)

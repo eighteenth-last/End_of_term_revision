@@ -190,9 +190,12 @@ import { useMessage } from 'naive-ui'
 import { subjectApi } from '@/api'
 import { RefreshOutline } from '@vicons/ionicons5'
 import axios from 'axios'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const message = useMessage()
-const userId = ref(1)
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 const loading = ref(false)
 const loadingMore = ref(false)
 const loadingDetails = ref(false)

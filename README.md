@@ -23,6 +23,7 @@
 - 📝 **练习记录**：详细记录每次练习的题目、答案、正确率
 - 🎨 **现代化 UI**：基于 Naive UI 的优雅界面设计
 - 🔐 **用户认证**：完整的注册登录系统，JWT 令牌认证
+- 👥 **多用户隔离**：完整的用户数据隔离，每个用户拥有独立的数据空间
 
 ## 🖼️ 系统截图
 
@@ -49,9 +50,6 @@
 
 ### AI 模型配置
 ![AI配置](./img/Snipaste_2025-12-17_22-45-31.png)
-
-### 数据库配置
-![数据库配置](./img/Snipaste_2025-12-17_22-45-37.png)
 
 ## 🏗️ 技术架构
 
@@ -85,8 +83,7 @@ End_of_term_revision/
 │   │   ├── import_router.py     # AI 导入
 │   │   ├── practice_router.py   # 练习功能
 │   │   ├── error_router.py      # 错题集
-│   │   ├── model_router.py      # 模型配置
-│   │   └── dbconfig_router.py   # 数据库配置
+│   │   └── model_router.py      # 模型配置
 │   ├── services/             # 业务逻辑层
 │   │   ├── ai_parser.py         # AI 解析服务
 │   │   ├── practice_service.py  # 练习服务
@@ -113,8 +110,9 @@ End_of_term_revision/
 │   │   │   ├── ErrorBook.vue    # 错题集
 │   │   │   ├── ErrorPractice.vue # 错题练习
 │   │   │   ├── PracticeHistory.vue # 练习记录
-│   │   │   ├── ModelConfig.vue  # AI 配置
-│   │   │   └── DbConfig.vue     # 数据库配置
+│   │   │   └── ModelConfig.vue  # AI 配置
+│   │   ├── stores/           # 状态管理
+│   │   │   └── user.js          # 用户状态
 │   │   └── assets/           # 静态资源
 │   ├── package.json          # 前端依赖
 │   └── vite.config.js        # Vite 配置
@@ -158,11 +156,10 @@ cd Server
 # 安装依赖
 pip install fastapi uvicorn sqlalchemy pymysql python-multipart pillow PyJWT bcrypt python-jose passlib openai
 
-# 配置环境变量（可选）
-# 创建 .env 文件并配置以下参数：
-# DATABASE_URL=mysql+pymysql://root:password@localhost:3306/end_of_term_revision
-# OPENAI_API_KEY=your_openai_api_key
-# OPENAI_BASE_URL=https://api.openai.com/v1
+# 配置数据库连接
+# 编辑 Server/database/db.py 文件，修改数据库连接信息：
+# DATABASE_URL = "mysql+pymysql://用户名:密码@主机:端口/数据库名"
+# 例如：DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/end_of_term_revision"
 
 # 启动后端服务
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
@@ -191,8 +188,7 @@ npm run dev
 
 1. 注册账号并登录
 2. 在「配置」→「AI 模型配置」中填入 OpenAI API Key
-3. 在「配置」→「数据库配置」中确认数据库连接信息（如需修改）
-4. 重启后端服务使配置生效
+3. 开始使用系统功能
 
 ## 📚 使用指南
 
@@ -256,7 +252,7 @@ npm run dev
 - **导入接口**：`/api/import/` - AI 解析题目
 - **练习接口**：`/api/practice/` - 练习功能
 - **错题接口**：`/api/errors/` - 错题集管理
-- **配置接口**：`/api/model/`、`/api/dbconfig/` - 系统配置
+- **配置接口**：`/api/models/` - AI 模型配置
 
 ## 🛠️ 开发说明
 
@@ -289,7 +285,6 @@ npm run dev
 | `/error-practice` | 错题练习 | 错题专项练习 |
 | `/practice-history` | 练习记录 | 历史记录 |
 | `/model-config` | AI 配置 | 模型配置 |
-| `/db-config` | 数据库配置 | 数据库设置 |
 
 ## ❓ 常见问题
 
@@ -325,11 +320,17 @@ npm run dev
 
 ### 5. 数据库连接失败？
 
+**错误示例：** `Access denied for user 'admin'@'localhost'`
+
 检查以下配置：
 - MySQL 服务是否启动
-- [database/db.py](Server/database/db.py) 中的数据库连接信息
+- 编辑 `Server/database/db.py` 文件，确认数据库连接信息正确
+  ```python
+  DATABASE_URL = "mysql+pymysql://用户名:密码@主机:端口/数据库名"
+  ```
 - 数据库是否已创建并导入表结构
-- 用户权限是否正确
+- 数据库用户名和密码是否正确
+- 用户是否有访问数据库的权限
 
 ## 🤝 贡献指南
 
@@ -342,6 +343,22 @@ npm run dev
 5. 提交 Pull Request
 
 ## 📝 更新日志
+
+### v1.3.0 (2025-12-19)
+
+- 🔐 **完整的用户数据隔离**
+  - 修复前端所有页面硬编码 userId 的问题
+  - 创建全局 Pinia 状态管理 (user store)
+  - 每个用户拥有完全独立的数据空间
+  - 支持多用户同时使用系统
+- 🗑️ **简化系统架构**
+  - 删除数据库配置功能，简化用户操作
+  - 统一在 `Server/database/db.py` 中配置数据库连接
+  - 减少配置错误的可能性，提升系统稳定性
+- 📚 **详细文档**
+  - 新增 [USER_ISOLATION_COMPLETE_FIX.md](USER_ISOLATION_COMPLETE_FIX.md) - 用户数据隔离修复说明
+  - 新增 [SECURITY_FIX.md](SECURITY_FIX.md) - 安全修复细节
+  - 新增 [DATABASE_CONFIG_REMOVAL.md](DATABASE_CONFIG_REMOVAL.md) - 数据库配置删除说明
 
 ### v1.0.1 (2025-12-19)
 

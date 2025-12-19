@@ -99,6 +99,8 @@ import { ref, onMounted } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import { modelApi } from '@/api'
 import { AddOutline, CubeOutline, CreateOutline, TrashOutline } from '@vicons/ionicons5'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -106,7 +108,8 @@ const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
 const isEdit = ref(false)
-const userId = ref(1)
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 const models = ref([])
 
 const formRef = ref(null)

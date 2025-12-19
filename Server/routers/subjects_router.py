@@ -74,12 +74,15 @@ def get_subjects(user_id: int, db: Session = Depends(get_default_db)):
 
 
 @router.get("/{subject_id}", response_model=SubjectResponse)
-def get_subject(subject_id: int, db: Session = Depends(get_default_db)):
+def get_subject(subject_id: int, user_id: int, db: Session = Depends(get_default_db)):
     """获取单个科目"""
-    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    subject = db.query(Subject).filter(
+        Subject.id == subject_id,
+        Subject.user_id == user_id
+    ).first()
     
     if not subject:
-        raise HTTPException(status_code=404, detail="科目不存在")
+        raise HTTPException(status_code=404, detail="科目不存在或无权访问")
     
     return SubjectResponse(
         id=subject.id,
@@ -90,12 +93,15 @@ def get_subject(subject_id: int, db: Session = Depends(get_default_db)):
 
 
 @router.delete("/{subject_id}")
-def delete_subject(subject_id: int, db: Session = Depends(get_default_db)):
+def delete_subject(subject_id: int, user_id: int, db: Session = Depends(get_default_db)):
     """删除科目"""
-    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    subject = db.query(Subject).filter(
+        Subject.id == subject_id,
+        Subject.user_id == user_id
+    ).first()
     
     if not subject:
-        raise HTTPException(status_code=404, detail="科目不存在")
+        raise HTTPException(status_code=404, detail="科目不存在或无权删除")
     
     db.delete(subject)
     db.commit()

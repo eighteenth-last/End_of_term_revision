@@ -206,11 +206,13 @@ import {
   EyeOutline,
   TrashOutline
 } from '@vicons/ionicons5'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const message = useMessage()
 const dialog = useDialog()
-
-const userId = ref(1)
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 const loading = ref(false)
 const questions = ref([])
 const subjects = ref([])

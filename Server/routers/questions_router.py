@@ -86,23 +86,23 @@ def get_question_types(
 
 
 @router.get("/{question_id}", response_model=QuestionResponse)
-def get_question(question_id: int, db: Session = Depends(get_default_db)):
+def get_question(question_id: int, user_id: int, db: Session = Depends(get_default_db)):
     """获取单个题目"""
-    question = QuestionService.get_question_by_id(db, question_id)
+    question = QuestionService.get_question_by_id(db, question_id, user_id)
     
     if not question:
-        raise HTTPException(status_code=404, detail="题目不存在")
+        raise HTTPException(status_code=404, detail="题目不存在或无权访问")
     
     return _format_question_response(question)
 
 
 @router.delete("/{question_id}")
-def delete_question(question_id: int, db: Session = Depends(get_default_db)):
+def delete_question(question_id: int, user_id: int, db: Session = Depends(get_default_db)):
     """删除题目"""
-    success = QuestionService.delete_question(db, question_id)
+    success = QuestionService.delete_question(db, question_id, user_id)
     
     if not success:
-        raise HTTPException(status_code=404, detail="题目不存在")
+        raise HTTPException(status_code=404, detail="题目不存在或无权删除")
     
     return {"message": "题目删除成功"}
 

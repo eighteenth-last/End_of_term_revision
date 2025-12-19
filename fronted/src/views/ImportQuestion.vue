@@ -119,9 +119,12 @@ import { createDiscreteApi } from 'naive-ui'
 import { subjectApi, importApi } from '@/api'
 import { DocumentTextOutline, ImageOutline } from '@vicons/ionicons5'
 import axios from 'axios'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const { message } = createDiscreteApi(['message'])
-const userId = ref(1)
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 const importing = ref(false)
 const loadingSubjects = ref(false)
 const subjects = ref([])

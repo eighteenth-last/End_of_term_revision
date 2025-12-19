@@ -136,13 +136,13 @@ def start_error_practice(
 
 
 @router.delete("/{error_id}")
-def remove_error(error_id: int, db: Session = Depends(get_default_db)):
+def remove_error(error_id: int, user_id: int, db: Session = Depends(get_default_db)):
     """
     移除错题记录
     """
-    success = ErrorService.remove_error(db, error_id)
+    success = ErrorService.remove_error(db, error_id, user_id)
     
     if not success:
-        raise HTTPException(status_code=404, detail="错题记录不存在")
+        raise HTTPException(status_code=404, detail="错题记录不存在或无权删除")
     
     return {"message": "错题移除成功"}

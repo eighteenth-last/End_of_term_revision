@@ -44,10 +44,13 @@ async def import_from_file(
     if not llm_config:
         raise HTTPException(status_code=400, detail="请先配置 AI 模型")
     
-    # 获取科目信息
-    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    # 获取科目信息（验证用户权限）
+    subject = db.query(Subject).filter(
+        Subject.id == subject_id,
+        Subject.user_id == user_id
+    ).first()
     if not subject:
-        raise HTTPException(status_code=404, detail="科目不存在")
+        raise HTTPException(status_code=404, detail="科目不存在或无权访问")
     
     # 保存上传的文件到临时目录
     try:
@@ -116,10 +119,13 @@ async def import_from_image(
     if not llm_config:
         raise HTTPException(status_code=400, detail="请先在「AI 模型配置」页面添加模型配置")
     
-    # 获取科目信息
-    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+    # 获取科目信息（验证用户权限）
+    subject = db.query(Subject).filter(
+        Subject.id == subject_id,
+        Subject.user_id == user_id
+    ).first()
     if not subject:
-        raise HTTPException(status_code=404, detail="科目不存在")
+        raise HTTPException(status_code=404, detail="科目不存在或无权访问")
     
     tmp_file_path = None
     
@@ -210,10 +216,13 @@ def import_from_text(
     if not llm_config:
         raise HTTPException(status_code=400, detail="请先配置 AI 模型")
     
-    # 获取科目信息
-    subject = db.query(Subject).filter(Subject.id == request.subject_id).first()
+    # 获取科目信息（验证用户权限）
+    subject = db.query(Subject).filter(
+        Subject.id == request.subject_id,
+        Subject.user_id == request.user_id
+    ).first()
     if not subject:
-        raise HTTPException(status_code=404, detail="科目不存在")
+        raise HTTPException(status_code=404, detail="科目不存在或无权访问")
     
     try:
         # 创建 AI 解析器

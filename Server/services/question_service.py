@@ -55,14 +55,18 @@ class QuestionService:
         return db_question
     
     @staticmethod
-    def get_question_by_id(db: Session, question_id: int) -> Optional[Question]:
+    def get_question_by_id(db: Session, question_id: int, user_id: int = None) -> Optional[Question]:
         """
         根据 ID 获取题目
         :param db: 数据库会话
         :param question_id: 题目 ID
+        :param user_id: 用户 ID（可选，用于数据隔离验证）
         :return: Question 实例或 None
         """
-        return db.query(Question).filter(Question.id == question_id).first()
+        query = db.query(Question).filter(Question.id == question_id)
+        if user_id is not None:
+            query = query.filter(Question.user_id == user_id)
+        return query.first()
     
     @staticmethod
     def get_questions_by_subject(
@@ -124,14 +128,18 @@ class QuestionService:
         return questions
     
     @staticmethod
-    def delete_question(db: Session, question_id: int) -> bool:
+    def delete_question(db: Session, question_id: int, user_id: int = None) -> bool:
         """
         删除题目
         :param db: 数据库会话
         :param question_id: 题目 ID
+        :param user_id: 用户 ID（可选，用于数据隔离验证）
         :return: 是否删除成功
         """
-        question = db.query(Question).filter(Question.id == question_id).first()
+        query = db.query(Question).filter(Question.id == question_id)
+        if user_id is not None:
+            query = query.filter(Question.user_id == user_id)
+        question = query.first()
         if question:
             db.delete(question)
             db.commit()

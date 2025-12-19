@@ -171,27 +171,4 @@ export const modelApi = {
   delete: (modelId) => request.delete(`/models/${modelId}`)
 }
 
-// ==================== 数据库配置 API ====================
-export const dbConfigApi = {
-  // 创建数据库配置
-  create: (data) => request.post('/dbconfig/', data),
-  
-  // 获取数据库配置列表
-  list: (userId) => request.get('/dbconfig/', { params: { user_id: userId } }),
-  
-  // 获取激活的数据库配置
-  getActive: (userId) => 
-    request.get('/dbconfig/active', { params: { user_id: userId } }),
-  
-  // 激活数据库配置
-  activate: (configId, userId) => 
-    request.put(`/dbconfig/${configId}/activate`, null, { params: { user_id: userId } }),
-  
-  // 更新数据库配置
-  update: (configId, data) => request.put(`/dbconfig/${configId}`, data),
-  
-  // 删除数据库配置
-  delete: (configId) => request.delete(`/dbconfig/${configId}`)
-}
-
 export default request

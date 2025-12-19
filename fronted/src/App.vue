@@ -157,6 +157,7 @@
 import { ref, h, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { createDiscreteApi } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import { 
   NIcon,
   NConfigProvider,
@@ -194,16 +195,17 @@ import {
   InformationCircleOutline
 } from '@vicons/ionicons5'
 import { authApi } from './api'
+import { useUserStore } from './stores/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 // 创建独立的 message 和 notification API
 const { message, notification } = createDiscreteApi(['message', 'notification'])
 
-// 认证状态
-const isLoggedIn = ref(false)
-const currentUser = ref(null)
+// 认证状态（使用 store）
+const { isLoggedIn, currentUser } = storeToRefs(userStore)
 const authTab = ref('login')
 const loading = ref(false)
 const showAuthModal = ref(false)
@@ -261,12 +263,8 @@ const handleLogin = async () => {
     
     const response = await authApi.login(loginForm.value)
     
-    // 保存token和用户信息
-    localStorage.setItem('token', response.token)
-    localStorage.setItem('user', JSON.stringify(response.user))
-    
-    currentUser.value = response.user
-    isLoggedIn.value = true
+    // 使用 store 保存用户信息
+    userStore.setUser(response.user, response.token)
     showAuthModal.value = false
     
     message.success('登录成功！')
@@ -289,12 +287,8 @@ const handleRegister = async () => {
       password: registerForm.value.password
     })
     
-    // 保存token和用户信息
-    localStorage.setItem('token', response.token)
-    localStorage.setItem('user', JSON.stringify(response.user))
-    
-    currentUser.value = response.user
-    isLoggedIn.value = true
+    // 使用 store 保存用户信息
+    userStore.setUser(response.user, response.token)
     showAuthModal.value = false
     
     message.success('注册成功！')
@@ -308,10 +302,7 @@ const handleRegister = async () => {
 
 // 登出处理
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  currentUser.value = null
-  isLoggedIn.value = false
+  userStore.logout()
   showAuthModal.value = true
   message.info('已退出登录')
 }
@@ -329,28 +320,12 @@ const showSystemInfo = () => {
 
 // 初始化检查登录状态
 onMounted(() => {
-  const token = localStorage.getItem('token')
-  const userStr = localStorage.getItem('user')
-  
-  if (token && userStr) {
-    try {
-      currentUser.value = JSON.parse(userStr)
-      isLoggedIn.value = true
-      showAuthModal.value = false
-    } catch (error) {
-      // 解析失败，清除数据
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      showAuthModal.value = true
-    }
-  } else {
-    // 未登录，显示登录弹窗
+  const success = userStore.initUser()
+  if (!success) {
+    // 未登录或初始化失败，显示登录弹窗
     showAuthModal.value = true
   }
 })
-
-// 当前用户ID（用于API调用）
-const currentUserId = computed(() => currentUser.value?.id || 1)
 
 // 当前激活的菜单项
 const activeKey = computed(() => route.path)
@@ -417,10 +392,6 @@ const menuOptions = [
       {
         label: 'AI 模型配置',
         key: '/model-config'
-      },
-      {
-        label: '数据库配置',
-        key: '/db-config'
       }
     ]
   }

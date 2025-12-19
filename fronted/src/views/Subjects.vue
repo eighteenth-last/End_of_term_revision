@@ -81,13 +81,16 @@ import { useMessage, useDialog } from 'naive-ui'
 import { subjectApi } from '@/api'
 import { AddOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
 import { NIcon } from 'naive-ui'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const message = useMessage()
 const dialog = useDialog()
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
-const userId = ref(1)
+const userStore = useUserStore()
+const { userId } = storeToRefs(userStore)
 const subjects = ref([])
 
 const formRef = ref(null)

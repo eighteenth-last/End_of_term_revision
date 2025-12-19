@@ -163,14 +163,18 @@ class ErrorService:
         return questions
     
     @staticmethod
-    def remove_error(db: Session, error_id: int) -> bool:
+    def remove_error(db: Session, error_id: int, user_id: int = None) -> bool:
         """
         移除错题记录
         :param db: 数据库会话
         :param error_id: 错题记录 ID
+        :param user_id: 用户 ID（可选，用于数据隔离验证）
         :return: 是否移除成功
         """
-        error = db.query(ErrorBook).filter(ErrorBook.id == error_id).first()
+        query = db.query(ErrorBook).filter(ErrorBook.id == error_id)
+        if user_id is not None:
+            query = query.filter(ErrorBook.user_id == user_id)
+        error = query.first()
         if error:
             db.delete(error)
             db.commit()

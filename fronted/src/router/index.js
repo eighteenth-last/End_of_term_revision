@@ -37,11 +37,6 @@ const routes = [
     component: () => import('@/views/ModelConfig.vue')
   },
   {
-    path: '/db-config',
-    name: 'DatabaseConfig',
-    component: () => import('@/views/DatabaseConfig.vue')
-  },
-  {
     path: '/question-bank',
     name: 'QuestionBank',
     component: () => import('@/views/QuestionBank.vue')

@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44-0ubuntu0.24.04.1)
  File Encoding         : 65001
 
- Date: 17/12/2025 22:38:26
+ Date: 21/12/2025 16:31:15
 */
 
 SET NAMES utf8mb4;
@@ -34,7 +34,7 @@ CREATE TABLE `db_configs`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `db_configs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户自定义数据库配置表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户自定义数据库配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for error_book
@@ -54,7 +54,7 @@ CREATE TABLE `error_book`  (
   CONSTRAINT `error_book_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `error_book_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `error_book_ibfk_3` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '错题集表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '错题集表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for llm_models
@@ -94,7 +94,7 @@ CREATE TABLE `practice_records`  (
   CONSTRAINT `practice_records_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `practice_records_ibfk_3` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `practice_records_ibfk_4` FOREIGN KEY (`session_id`) REFERENCES `practice_sessions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '练习记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 39 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '练习记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for practice_sessions
@@ -116,7 +116,25 @@ CREATE TABLE `practice_sessions`  (
   INDEX `practice_sessions_ibfk_2`(`subject_id` ASC) USING BTREE,
   CONSTRAINT `practice_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `practice_sessions_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '练习会话表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '练习会话表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for question_resources
+-- ----------------------------
+DROP TABLE IF EXISTS `question_resources`;
+CREATE TABLE `question_resources`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '资源ID',
+  `question_id` bigint NOT NULL COMMENT '关联题目ID',
+  `resource_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '资源类型：image/table_json/diagram_desc/other',
+  `resource_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '资源内容：图片URL或JSON数据',
+  `resource_order` int NULL DEFAULT 0 COMMENT '资源显示顺序',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_question_id`(`question_id` ASC) USING BTREE,
+  INDEX `idx_resource_type`(`resource_type` ASC) USING BTREE,
+  CONSTRAINT `question_resources_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目资源表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for questions
@@ -126,7 +144,7 @@ CREATE TABLE `questions`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '题目 ID',
   `subject_id` bigint NOT NULL COMMENT '科目 ID',
   `user_id` bigint NOT NULL COMMENT '用户 ID',
-  `type` enum('single','multiple','judge','fill') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '题目类型',
+  `type` enum('single','multiple','judge','fill','major') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '题目类型',
   `question` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '题干内容',
   `options_json` json NULL COMMENT '选项 JSON',
   `answer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '正确答案',
@@ -137,7 +155,7 @@ CREATE TABLE `questions`  (
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `questions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 48 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '题库表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 138 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '题库表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for subjects
@@ -152,7 +170,7 @@ CREATE TABLE `subjects`  (
   UNIQUE INDEX `name`(`name` ASC, `user_id` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `subjects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '科目表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '科目表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for system_config

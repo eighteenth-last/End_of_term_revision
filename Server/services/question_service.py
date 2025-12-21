@@ -11,7 +11,25 @@ import json
 
 class QuestionService:
     """题目服务类"""
-    
+
+    @staticmethod
+    def auto_judge_fill_type(question: str, options: list, question_type: str) -> bool:
+        """
+        自动判定是否为填空题：题干含下划线或括号，且无选项，且不是判断题
+        :param question: 题干内容
+        :param options: 选项列表
+        :param question_type: 题目类型
+        :return: 是否为填空题
+        """
+        if question_type == 'judge':
+            return False
+        if options and len(options) > 0:
+            # 有选项，不是填空题
+            return False
+        if ('_' in question) or ('（' in question) or ('(' in question) or ('）' in question) or (')' in question):
+            return True
+        return False
+
     @staticmethod
     def create_question(
         db: Session,
@@ -37,11 +55,15 @@ class QuestionService:
         """
         # 选项转 JSON
         options_json = json.dumps(options, ensure_ascii=False) if options else None
-        
+
+        # 自动判定填空题
+        auto_fill = QuestionService.auto_judge_fill_type(question, options, question_type)
+        final_type = 'fill' if auto_fill else question_type
+
         db_question = Question(
             user_id=user_id,
             subject_id=subject_id,
-            type=question_type,
+            type=final_type,
             question=question,
             options_json=options_json,
             answer=answer,

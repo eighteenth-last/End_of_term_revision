@@ -11,7 +11,8 @@ from routers import (
     practice_router,
     error_router,
     model_router,
-    auth_router
+    auth_router,
+    resource_router
 )
 
 # 创建 FastAPI 应用
@@ -38,6 +39,7 @@ app.include_router(import_router.router)
 app.include_router(practice_router.router)
 app.include_router(error_router.router)
 app.include_router(model_router.router)
+app.include_router(resource_router.router)
 
 
 @app.on_event("startup")

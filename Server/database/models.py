@@ -13,6 +13,7 @@ class QuestionType(enum.Enum):
     multiple = "multiple"  # 多选
     judge = "judge"        # 判断
     fill = "fill"          # 填空
+    major = "major"        # 大型题
 
 
 class User(Base):
@@ -75,6 +76,20 @@ class Question(Base):
     answer = Column(String(255), nullable=False, comment='正确答案')
     analysis = Column(Text, nullable=False, comment='解析')
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), comment='创建时间')
+    # 移除is_major字段，统一用type区分
+
+
+class QuestionResource(Base):
+    """题目资源表（图片、表格JSON、图像描述等）"""
+    __tablename__ = "question_resources"
+    
+    id = Column(BigInteger, primary_key=True, autoincrement=True, comment='资源ID')
+    question_id = Column(BigInteger, ForeignKey('questions.id', ondelete='CASCADE'), nullable=False, comment='关联题目ID')
+    resource_type = Column(String(50), nullable=False, comment='资源类型：image/table_json/diagram_desc/other')
+    resource_content = Column(Text, nullable=False, comment='资源内容：图片URL或JSON数据')
+    resource_order = Column(Integer, default=0, comment='资源显示顺序')
+    created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), comment='创建时间')
+    updated_at = Column(TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp(), comment='更新时间')
 
 
 class PracticeSession(Base):

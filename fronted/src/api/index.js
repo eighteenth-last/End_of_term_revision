@@ -171,4 +171,16 @@ export const modelApi = {
   delete: (modelId) => request.delete(`/models/${modelId}`)
 }
 
+// ==================== 题目资源 API ====================
+export const resourceApi = {
+  // 创建资源
+  create: (data) => request.post('/resources/', data),
+  
+  // 获取题目的所有资源
+  getByQuestion: (questionId) => request.get(`/resources/question/${questionId}`),
+  
+  // 删除资源
+  delete: (resourceId) => request.delete(`/resources/${resourceId}`)
+}
+
 export default request

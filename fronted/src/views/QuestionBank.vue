@@ -57,6 +57,7 @@
           <n-statistic label="多选题" :value="typeCount.multiple || 0" />
           <n-statistic label="判断题" :value="typeCount.judge || 0" />
           <n-statistic label="填空题" :value="typeCount.fill || 0" />
+          <n-statistic label="大型题" :value="typeCount.major || 0" />
         </n-space>
       </n-card>
 
@@ -67,8 +68,7 @@
             v-if="questions.length === 0"
             description="暂无题目数据"
             style="margin: 40px 0;"
-          />
-          
+          />          
           <n-list v-else bordered>
             <n-list-item v-for="(question, index) in paginatedQuestions" :key="question.id">
               <template #prefix>
@@ -80,7 +80,16 @@
               <n-thing>
                 <template #header>
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 500;">{{ (currentPage - 1) * pageSize + index + 1 }}. {{ question.question }}</span>
+                    <span style="font-weight: 500;">{{ (currentPage - 1) * pageSize + index + 1 }}. </span>
+                    <template v-if="question.type === 'major'">
+                      <!-- 大型题只显示文本内容，不显示表格 -->
+                      <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                        <TableRenderer :content="question.question" />  
+                      </div>
+                    </template>
+                    <template v-else>
+                      <TableRenderer :content="question.question" />  
+                    </template>
                   </div>
                 </template>
                 
@@ -101,42 +110,7 @@
                   </n-space>
                 </template>
                 
-                <template #description>
-                  <n-space vertical size="small" style="margin-top: 8px;">
-                    <!-- 选项 -->
-                    <div v-if="question.options && question.options.length > 0">
-                      <n-space vertical size="small">
-                        <div v-for="(option, idx) in question.options" :key="idx" style="font-size: 14px;">
-                          {{ option }}
-                        </div>
-                      </n-space>
-                    </div>
-                    
-                    <!-- 答案 -->
-                    <div style="margin-top: 8px;">
-                      <n-text strong>答案：</n-text>
-                      <n-text type="success">{{ question.answer }}</n-text>
-                    </div>
-                    
-                    <!-- 解析 -->
-                    <div style="margin-top: 4px;">
-                      <n-text strong>解析：</n-text>
-                      <n-text depth="3">{{ question.analysis }}</n-text>
-                    </div>
-                    
-                    <!-- 元信息 -->
-                    <div style="margin-top: 8px;">
-                      <n-space size="small">
-                        <n-tag size="tiny" :bordered="false">
-                          科目: {{ getSubjectName(question.subject_id) }}
-                        </n-tag>
-                        <n-tag size="tiny" :bordered="false">
-                          创建时间: {{ question.created_at }}
-                        </n-tag>
-                      </n-space>
-                    </div>
-                  </n-space>
-                </template>
+                <!-- 移除描述部分，只显示题目类型、题目名称、查看和删除按钮 -->
               </n-thing>
             </n-list-item>
           </n-list>
@@ -151,7 +125,7 @@
               :page-sizes="[10, 20, 50, 100]"
               @update:page="handlePageChange"
               @update:page-size="handlePageSizeChange"
-            />
+            />          
           </div>
         </n-spin>
       </n-card>
@@ -171,20 +145,22 @@
               {{ getSubjectName(currentQuestion.subject_id) }}
             </n-descriptions-item>
             <n-descriptions-item label="题目内容">
-              {{ currentQuestion.question }}
+              <TableRenderer :content="currentQuestion.question" />  
             </n-descriptions-item>
             <n-descriptions-item label="选项" v-if="currentQuestion.options && currentQuestion.options.length > 0">
               <n-space vertical size="small">
                 <div v-for="(option, idx) in currentQuestion.options" :key="idx">
-                  {{ option }}
+                  <FormulaRenderer :content="option" />  
                 </div>
               </n-space>
             </n-descriptions-item>
             <n-descriptions-item label="正确答案">
-              <n-text type="success" strong>{{ currentQuestion.answer }}</n-text>
+              <n-text type="success" strong>
+                <FormulaRenderer :content="currentQuestion.answer" />  
+              </n-text>
             </n-descriptions-item>
             <n-descriptions-item label="题目解析">
-              {{ currentQuestion.analysis }}
+              <FormulaRenderer :content="currentQuestion.analysis" />  
             </n-descriptions-item>
             <n-descriptions-item label="创建时间">
               {{ currentQuestion.created_at }}
@@ -208,6 +184,8 @@ import {
 } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
+import FormulaRenderer from '@/components/FormulaRenderer.vue'
+import TableRenderer from '@/components/TableRenderer.vue'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -229,7 +207,8 @@ const typeOptions = [
   { label: '单选题', value: 'single' },
   { label: '多选题', value: 'multiple' },
   { label: '判断题', value: 'judge' },
-  { label: '填空题', value: 'fill' }
+  { label: '填空题', value: 'fill' },
+  { label: '大型题', value: 'major' }
 ]
 
 // 科目选项
@@ -264,7 +243,8 @@ const getTypeTagType = (type) => {
     single: 'info',
     multiple: 'success',
     judge: 'warning',
-    fill: 'error'
+    fill: 'error',
+    major: 'primary'
   }
   return map[type] || 'default'
 }
@@ -275,7 +255,8 @@ const getTypeLabel = (type) => {
     single: '单选',
     multiple: '多选',
     judge: '判断',
-    fill: '填空'
+    fill: '填空',
+    major: '大型题'
   }
   return map[type] || type
 }

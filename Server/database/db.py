@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # 默认数据库配置（用于初始系统表）
-DEFAULT_DATABASE_URL = "mysql+pymysql://admin:qwer4321@localhost:3306/end_of_term_revision?charset=utf8mb4"
+DEFAULT_DATABASE_URL = "mysql+pymysql://root:qwer4321@localhost:3306/end_of_term_revision?charset=utf8mb4"
 
 # 创建默认引擎
 default_engine = create_engine(

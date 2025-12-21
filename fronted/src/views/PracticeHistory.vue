@@ -146,35 +146,39 @@
                 <n-tag :type="detail.is_correct ? 'success' : 'error'" size="small">
                   {{ detail.is_correct ? '✓ 正确' : '✗ 错误' }}
                 </n-tag>
-                <n-text strong style="font-size: 15px;">
-                  {{ idx + 1 }}. ({{ getTypeLabel(detail.type) }}) {{ detail.question }}
-                </n-text>
+                <div style="font-weight: 500; font-size: 15px;">
+                  {{ idx + 1 }}. ({{ getTypeLabel(detail.type) }}) <TableRenderer :content="detail.question" />
+                </div>
               </n-space>
 
               <!-- 选项 -->
               <n-space v-if="detail.type !== 'fill'" vertical size="small">
-                <n-text
+                <div
                   v-for="(option, oidx) in detail.options"
                   :key="oidx"
-                  :type="isCorrectOption(option, detail.correct_answer) ? 'success' : 'default'"
+                  :style="{
+                    color: isCorrectOption(option, detail.correct_answer) ? '#18a058' : 'inherit'
+                  }"
                 >
-                  {{ option }}
-                </n-text>
+                  <FormulaRenderer :content="option" />
+                </div>
               </n-space>
 
               <!-- 答案对比 -->
               <n-space>
                 <n-text depth="3">你的答案：</n-text>
                 <n-tag :type="detail.is_correct ? 'success' : 'error'" size="small">
-                  {{ detail.user_answer || '未作答' }}
+                  <FormulaRenderer :content="detail.user_answer || '未作答'" />
                 </n-tag>
                 <n-text depth="3">正确答案：</n-text>
-                <n-tag type="success" size="small">{{ detail.correct_answer }}</n-tag>
+                <n-tag type="success" size="small">
+                  <FormulaRenderer :content="detail.correct_answer" />
+                </n-tag>
               </n-space>
 
               <!-- 解析 -->
               <n-alert type="info" title="解析">
-                {{ detail.analysis }}
+                <FormulaRenderer :content="detail.analysis" />
               </n-alert>
             </n-space>
           </n-list-item>
@@ -192,6 +196,8 @@ import { RefreshOutline } from '@vicons/ionicons5'
 import axios from 'axios'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
+import FormulaRenderer from '@/components/FormulaRenderer.vue'
+import TableRenderer from '@/components/TableRenderer.vue'
 
 const message = useMessage()
 const userStore = useUserStore()

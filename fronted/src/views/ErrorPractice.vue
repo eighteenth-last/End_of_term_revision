@@ -73,9 +73,14 @@
           <n-card 
             v-for="(question, qIndex) in questions" 
             :key="question.id"
-            :title="`${qIndex + 1}.(${getTypeLabel(question.type)}) ${question.question}`"
             :id="`question-${qIndex}`"
           >
+            <template #header>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span>{{ qIndex + 1 }}.({{ getTypeLabel(question.type) }}) </span>
+                <TableRenderer :content="question.question" />
+              </div>
+            </template>
             <n-space vertical size="large">
               <n-text strong style="font-size: 14px; color: #666;">分值: {{ question.score || 2 }}分</n-text>
               
@@ -87,9 +92,10 @@
                       v-for="(option, index) in question.options"
                       :key="index"
                       :value="getOptionValue(option)"
-                      :label="option"
                       size="large"
-                    />
+                    >
+                      <FormulaRenderer :content="option" />
+                    </n-radio>
                   </n-space>
                 </n-radio-group>
               </div>
@@ -102,20 +108,32 @@
                       v-for="(option, index) in question.options"
                       :key="index"
                       :value="getOptionValue(option)"
-                      :label="option"
                       size="large"
-                    />
+                    >
+                      <FormulaRenderer :content="option" />
+                    </n-checkbox>
                   </n-space>
                 </n-checkbox-group>
               </div>
 
               <!-- 填空题 -->
-              <n-input
-                v-else
-                v-model:value="answers[question.id]"
-                placeholder="请输入答案"
-                size="large"
-              />
+              <template v-if="question.type === 'fill'">
+                <n-input
+                  v-model:value="answers[question.id]"
+                  placeholder="请输入答案"
+                  size="large"
+                />
+              </template>
+              <!-- 大题：文本+图片上传 -->
+              <template v-else-if="question.type === 'major'">
+                <n-input
+                  v-model:value="answers[question.id]"
+                  placeholder="请输入答案"
+                  size="large"
+                  style="margin-bottom: 8px;"
+                />
+                <ImageUploader v-model="majorImages[question.id]" :max="3" />
+              </template>
             </n-space>
           </n-card>
         </n-space>
@@ -163,6 +181,9 @@ import { useRouter } from 'vue-router'
 import { subjectApi, errorApi, practiceApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
+import FormulaRenderer from '@/components/FormulaRenderer.vue'
+import TableRenderer from '@/components/TableRenderer.vue'
+import ImageUploader from '@/components/ImageUploader.vue'
 
 const message = useMessage()
 const router = useRouter()
@@ -178,6 +199,7 @@ const selectedTypes = ref([])
 const questions = ref([])
 const answers = ref({})
 const multiAnswers = ref({})
+const majorImages = ref({}) // { [questionId]: [base64, ...] }
 
 const config = ref({
   subject_id: null,
@@ -185,7 +207,8 @@ const config = ref({
     single: 0,
     multiple: 0,
     judge: 0,
-    fill: 0
+    fill: 0,
+    major: 0
   }
 })
 
@@ -193,7 +216,8 @@ const typeOptions = [
   { label: '单选题', value: 'single' },
   { label: '多选题', value: 'multiple' },
   { label: '判断题', value: 'judge' },
-  { label: '填空题', value: 'fill' }
+  { label: '填空题', value: 'fill' },
+  { label: '大型题', value: 'major' }
 ]
 
 const subjectOptions = computed(() => {
@@ -222,7 +246,7 @@ const canStart = computed(() => {
 })
 
 const getTypeLabel = (type) => {
-  const map = { single: '单选题', multiple: '多选题', judge: '判断题', fill: '填空题' }
+  const map = { single: '单选题', multiple: '多选题', judge: '判断题', fill: '填空题', major: '大型题' }
   return map[type] || type
 }
 
@@ -264,7 +288,7 @@ const handleSubjectChange = async (subjectId) => {
     const data = await errorApi.getTypes(subjectId, userId.value)
     availableTypes.value = data.types
     selectedTypes.value = []
-    config.value.question_counts = { single: 0, multiple: 0, judge: 0, fill: 0 }
+    config.value.question_counts = { single: 0, multiple: 0, judge: 0, fill: 0, major: 0 }
   } catch (error) {
     message.error(error.message || '获取题型失败')
   }
@@ -290,6 +314,9 @@ const startPractice = async () => {
         newMultiAnswers[q.id] = []
       } else {
         newAnswers[q.id] = ''
+      }
+      if (q.type === 'major') {
+        majorImages.value[q.id] = []
       }
     })
     answers.value = newAnswers
@@ -317,12 +344,17 @@ const submitAnswers = async () => {
 
   submitting.value = true
   try {
-    const formattedAnswers = questions.value.map(q => ({
-      question_id: q.id,
-      user_answer: q.type === 'multiple' 
+    const formattedAnswers = questions.value.map(q => {
+      let user_answer = q.type === 'multiple' 
         ? (multiAnswers.value[q.id] || []).sort().join(',')
         : (answers.value[q.id] || '')
-    }))
+      let images = q.type === 'major' ? (majorImages.value[q.id] || []) : []
+      return {
+        question_id: q.id,
+        user_answer,
+        images
+      }
+    })
 
     const data = await practiceApi.submit({
       user_id: userId.value,

@@ -71,33 +71,37 @@
               <n-scrollbar style="max-height: 330px;">
                 <n-space vertical size="large">
                   <!-- 题目 -->
-                  <n-text strong style="font-size: 15px; line-height: 1.6;">
-                    {{ error.question }}
-                  </n-text>
+                  <div style="font-weight: 500; font-size: 15px; line-height: 1.6;">
+                    <TableRenderer :content="error.question" />
+                  </div>
                   
                   <!-- 选项 -->
                   <n-space v-if="error.type !== 'fill'" vertical size="small">
-                    <n-text
+                    <div
                       v-for="(option, idx) in error.options"
                       :key="idx"
-                      :type="isCorrectOption(option, error.answer) ? 'success' : 'default'"
-                      style="line-height: 1.8;"
+                      :style="{
+                        color: isCorrectOption(option, error.answer) ? '#18a058' : 'inherit',
+                        lineHeight: '1.8'
+                      }"
                     >
-                      {{ option }}
-                    </n-text>
+                      <FormulaRenderer :content="option" />
+                    </div>
                   </n-space>
 
                   <!-- 正确答案 -->
                   <n-space align="center">
                     <n-text depth="3">正确答案：</n-text>
-                    <n-tag type="success" size="small">{{ error.answer }}</n-tag>
+                    <n-tag type="success" size="small">
+                      <FormulaRenderer :content="error.answer" />
+                    </n-tag>
                   </n-space>
 
                   <!-- 解析 -->
                   <n-collapse accordion>
                     <n-collapse-item title="查看解析" name="analysis">
                       <n-alert type="info" style="font-size: 14px;">
-                        {{ error.analysis }}
+                        <FormulaRenderer :content="error.analysis" />
                       </n-alert>
                     </n-collapse-item>
                   </n-collapse>
@@ -125,6 +129,8 @@ import { subjectApi, errorApi } from '@/api'
 import { CreateOutline } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
+import FormulaRenderer from '@/components/FormulaRenderer.vue'
+import TableRenderer from '@/components/TableRenderer.vue'
 
 const message = useMessage()
 const dialog = useDialog()

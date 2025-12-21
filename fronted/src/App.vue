@@ -311,7 +311,7 @@ const handleLogout = () => {
 const showSystemInfo = () => {
   notification.info({
     title: '系统信息',
-    content: '版本：v1.0.0\n作者：程序员Eighteen\n联系方式：QQ邮箱：3273495516@qq.com',
+    content: '版本：v1.4.0\n作者：程序员Eighteen\n联系方式：QQ邮箱：3273495516@qq.com',
     meta: '神阁卷藏 - AI智能期末复习系统',
     duration: 5000,
     keepAliveOnHover: true

@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44-0ubuntu0.24.04.1)
  File Encoding         : 65001
 
- Date: 21/12/2025 16:31:15
+ Date: 22/12/2025 14:12:47
 */
 
 SET NAMES utf8mb4;
@@ -158,6 +158,27 @@ CREATE TABLE `questions`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 138 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '题库表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for subject_shares
+-- ----------------------------
+DROP TABLE IF EXISTS `subject_shares`;
+CREATE TABLE `subject_shares`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '共享记录ID',
+  `owner_user_id` bigint NOT NULL COMMENT '科目拥有者ID',
+  `subject_id` bigint NOT NULL COMMENT '被共享的科目ID',
+  `target_user_id` bigint NULL DEFAULT NULL COMMENT '被共享给的用户ID（NULL表示公共共享）',
+  `share_type` enum('USER','PUBLIC') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '共享类型：USER=指定用户，PUBLIC=公共',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_share`(`subject_id` ASC, `target_user_id` ASC, `share_type` ASC) USING BTREE,
+  INDEX `idx_subject_id`(`subject_id` ASC) USING BTREE,
+  INDEX `idx_target_user`(`target_user_id` ASC) USING BTREE,
+  INDEX `idx_owner`(`owner_user_id` ASC) USING BTREE,
+  CONSTRAINT `subject_shares_ibfk_1` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `subject_shares_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `subject_shares_ibfk_3` FOREIGN KEY (`target_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '科目共享表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
 -- Table structure for subjects
 -- ----------------------------
 DROP TABLE IF EXISTS `subjects`;
@@ -197,6 +218,6 @@ CREATE TABLE `users`  (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `username`(`username` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统用户表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统用户表' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

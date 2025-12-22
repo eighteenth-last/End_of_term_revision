@@ -100,15 +100,17 @@ class QuestionService:
     ) -> List[Question]:
         """
         获取科目下的题目列表
+        支持共享科目：只按 subject_id 查询
+        
         :param db: 数据库会话
-        :param user_id: 用户 ID
+        :param user_id: 用户 ID（保留参数兼容性）
         :param subject_id: 科目 ID
         :param question_type: 题目类型（可选）
         :param limit: 限制数量（可选）
         :return: Question 列表
         """
+        # 只按 subject_id 查询，支持共享题库
         query = db.query(Question).filter(
-            Question.user_id == user_id,
             Question.subject_id == subject_id
         )
         
@@ -129,8 +131,11 @@ class QuestionService:
     ) -> List[Question]:
         """
         随机获取指定数量的题目
+        支持共享科目：只按 subject_id 查询，不过滤 user_id
+        权限检查由调用方（practice_router）在 ShareService 中完成
+        
         :param db: 数据库会话
-        :param user_id: 用户 ID
+        :param user_id: 用户 ID（保留参数兼容性，但不用于过滤）
         :param subject_id: 科目 ID
         :param question_counts: 题目类型和数量的字典，例如 {"single": 10, "multiple": 5}
         :return: Question 列表
@@ -139,8 +144,8 @@ class QuestionService:
         
         for question_type, count in question_counts.items():
             if count > 0:
+                # 只按 subject_id 查询，不过滤 user_id，支持共享题库
                 type_questions = db.query(Question).filter(
-                    Question.user_id == user_id,
                     Question.subject_id == subject_id,
                     Question.type == question_type
                 ).order_by(func.rand()).limit(count).all()
@@ -172,13 +177,15 @@ class QuestionService:
     def get_question_types_by_subject(db: Session, user_id: int, subject_id: int) -> List[str]:
         """
         获取科目下的所有题目类型
+        支持共享科目：只按 subject_id 查询
+        
         :param db: 数据库会话
-        :param user_id: 用户 ID
+        :param user_id: 用户 ID（保留参数兼容性）
         :param subject_id: 科目 ID
         :return: 题目类型列表
         """
+        # 只按 subject_id 查询，支持共享题库
         types = db.query(Question.type).filter(
-            Question.user_id == user_id,
             Question.subject_id == subject_id
         ).distinct().all()
         

@@ -9,6 +9,7 @@ from database.db import get_default_db
 from services.question_service import QuestionService
 from services.practice_service import PracticeService
 from services.error_service import ErrorService
+from services.share_service import ShareService  # 新增
 import json
 
 router = APIRouter(prefix="/api/practice", tags=["练习"])
@@ -78,7 +79,12 @@ class HomeStatisticsResponse(BaseModel):
 def start_practice(request: PracticeRequest, db: Session = Depends(get_default_db)):
     """
     开始练习（随机抽题）
+    支持使用共享科目练习
     """
+    # 权限检查：验证用户是否有权访问该科目
+    if not ShareService.can_access_subject(request.user_id, request.subject_id, db):
+        raise HTTPException(status_code=403, detail="无权访问此科目")
+    
     # 验证至少选择一种题型
     if not request.question_counts or sum(request.question_counts.values()) == 0:
         raise HTTPException(status_code=400, detail="请至少选择一种题型")

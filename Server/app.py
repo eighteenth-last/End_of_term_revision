@@ -12,7 +12,8 @@ from routers import (
     error_router,
     model_router,
     auth_router,
-    resource_router
+    resource_router,
+    shares_router  # 新增
 )
 
 # 创建 FastAPI 应用
@@ -40,6 +41,7 @@ app.include_router(practice_router.router)
 app.include_router(error_router.router)
 app.include_router(model_router.router)
 app.include_router(resource_router.router)
+app.include_router(shares_router.router)  # 新增：共享管理路由
 
 
 @app.on_event("startup")

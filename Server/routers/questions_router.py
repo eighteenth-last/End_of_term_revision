@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from database.db import get_default_db
 from database.models import Question
 from services.question_service import QuestionService
+from services.share_service import ShareService  # 新增
 import json
 
 router = APIRouter(prefix="/api/questions", tags=["题目管理"])
@@ -98,11 +99,19 @@ def get_question(question_id: int, user_id: int, db: Session = Depends(get_defau
 
 @router.delete("/{question_id}")
 def delete_question(question_id: int, user_id: int, db: Session = Depends(get_default_db)):
-    """删除题目"""
-    success = QuestionService.delete_question(db, question_id, user_id)
+    """删除题目（仅科目拥有者可删除）"""
+    # 获取题目
+    question = QuestionService.get_question_by_id(db, question_id, user_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="题目不存在")
     
+    # 权限检查：只有科目拥有者可删除题目
+    if not ShareService.can_edit_subject(user_id, question.subject_id, db):
+        raise HTTPException(status_code=403, detail="无权删除此题目")
+    
+    success = QuestionService.delete_question(db, question_id, user_id)
     if not success:
-        raise HTTPException(status_code=404, detail="题目不存在或无权删除")
+        raise HTTPException(status_code=404, detail="删除失败")
     
     return {"message": "题目删除成功"}
 

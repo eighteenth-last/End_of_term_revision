@@ -16,6 +16,13 @@ class QuestionType(enum.Enum):
     major = "major"        # 大型题
 
 
+class ShareType(enum.Enum):
+    """共享类型枚举"""
+    USER = "USER"      # 指定用户共享
+    PUBLIC = "PUBLIC"  # 公共共享
+
+
+
 class User(Base):
     """用户表"""
     __tablename__ = "users"
@@ -61,6 +68,19 @@ class Subject(Base):
     user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, comment='所属用户 ID')
     name = Column(String(255), nullable=False, comment='科目名称')
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), comment='创建时间')
+
+
+class SubjectShare(Base):
+    """科目共享表"""
+    __tablename__ = "subject_shares"
+    
+    id = Column(BigInteger, primary_key=True, autoincrement=True, comment='共享记录ID')
+    owner_user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, comment='科目拥有者ID')
+    subject_id = Column(BigInteger, ForeignKey('subjects.id', ondelete='CASCADE'), nullable=False, comment='被共享的科目ID')
+    target_user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True, comment='被共享给的用户ID（NULL表示公共）')
+    share_type = Column(Enum(ShareType), nullable=False, comment='共享类型：USER=指定用户，PUBLIC=公共')
+    created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), comment='创建时间')
+
 
 
 class Question(Base):

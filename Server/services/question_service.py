@@ -24,11 +24,13 @@ class QuestionService:
         if question_type == 'judge':
             return False
         if options and len(options) > 0:
-            # 有选项，不是填空题
             return False
-        if ('_' in question) or ('（' in question) or ('(' in question) or ('）' in question) or (')' in question):
-            return True
-        return False
+        has_blank = False
+        if "___" in question or "____" in question or "_____" in question:
+            has_blank = True
+        if "（）" in question or "( )" in question:
+            has_blank = True
+        return has_blank
 
     @staticmethod
     def create_question(
@@ -39,7 +41,8 @@ class QuestionService:
         question: str,
         options: List[str],
         answer: str,
-        analysis: str
+        analysis: str,
+        adjacent_question_type: Optional[str] = None
     ) -> Question:
         """
         创建题目
@@ -53,12 +56,26 @@ class QuestionService:
         :param analysis: 解析
         :return: Question 实例
         """
-        # 选项转 JSON
         options_json = json.dumps(options, ensure_ascii=False) if options else None
 
-        # 自动判定填空题
         auto_fill = QuestionService.auto_judge_fill_type(question, options, question_type)
-        final_type = 'fill' if auto_fill else question_type
+        if auto_fill and adjacent_question_type == 'major':
+            if "求置信区间" in question or "求概率" in question:
+                auto_fill = False
+
+        final_type = question_type
+
+        if auto_fill:
+            final_type = 'fill'
+        elif question_type == 'fill':
+            text = (question or "").strip()
+            has_blank = False
+            if "___" in text or "____" in text or "_____" in text:
+                has_blank = True
+            if "（）" in text or "( )" in text:
+                has_blank = True
+            if not has_blank and len(text) > 40:
+                final_type = 'major'
 
         db_question = Question(
             user_id=user_id,
@@ -234,7 +251,8 @@ class QuestionService:
         created_questions = []
         skipped_count = 0
         
-        for q_data in questions_data:
+        total = len(questions_data)
+        for index, q_data in enumerate(questions_data):
             # 检查是否重复
             if skip_duplicates and QuestionService.check_duplicate_question(
                 db, user_id, subject_id, q_data["question"]
@@ -242,7 +260,17 @@ class QuestionService:
                 skipped_count += 1
                 print(f"[去重] 跳过重复题目: {q_data['question'][:50]}...")
                 continue
-            
+
+            prev_type = None
+            next_type = None
+            if index > 0:
+                prev_type = questions_data[index - 1].get("type")
+            if index + 1 < total:
+                next_type = questions_data[index + 1].get("type")
+            adjacent_question_type = None
+            if prev_type == "major" or next_type == "major":
+                adjacent_question_type = "major"
+
             question = QuestionService.create_question(
                 db=db,
                 user_id=user_id,
@@ -251,7 +279,8 @@ class QuestionService:
                 question=q_data["question"],
                 options=q_data.get("options", []),
                 answer=q_data["answer"],
-                analysis=q_data["analysis"]
+                analysis=q_data["analysis"],
+                adjacent_question_type=adjacent_question_type
             )
             created_questions.append(question)
         

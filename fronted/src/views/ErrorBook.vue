@@ -154,7 +154,8 @@ const getTypeLabel = (type) => {
     single: '单选题',
     multiple: '多选题',
     judge: '判断题',
-    fill: '填空题'
+    fill: '填空题',
+    major:'大型题'
   }
   return map[type] || type
 }

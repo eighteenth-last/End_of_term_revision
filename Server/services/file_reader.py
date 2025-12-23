@@ -6,6 +6,9 @@ import os
 from typing import Optional
 import pdfplumber
 from docx import Document
+from docx.document import Document as DocxDocument
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 
 class FileReader:
@@ -54,9 +57,22 @@ class FileReader:
         """
         try:
             doc = Document(file_path)
-            text = ""
-            for paragraph in doc.paragraphs:
-                text += paragraph.text + "\n"
+            parts = []
+            if isinstance(doc, DocxDocument):
+                body = doc.element.body
+                for child in body.iterchildren():
+                    if child.tag.endswith("}p"):
+                        paragraph = Paragraph(child, doc)
+                        if paragraph.text:
+                            parts.append(paragraph.text)
+                    elif child.tag.endswith("}tbl"):
+                        table = Table(child, doc)
+                        for row in table.rows:
+                            cells_text = [cell.text.strip() for cell in row.cells]
+                            line = "\t".join(cells_text).strip()
+                            if line:
+                                parts.append(line)
+            text = "\n".join(parts)
             return text.strip()
         except Exception as e:
             raise ValueError(f"Word 文档读取失败: {str(e)}")

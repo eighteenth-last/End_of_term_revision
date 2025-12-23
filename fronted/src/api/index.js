@@ -57,7 +57,7 @@ export const subjectApi = {
   get: (subjectId) => request.get(`/subjects/${subjectId}`),
 
   // 删除科目
-  delete: (subjectId) => request.delete(`/subjects/${subjectId}`)
+  delete: (subjectId, config) => request.delete(`/subjects/${subjectId}`, config)
 }
 
 // ==================== 题目管理 API ====================
@@ -76,7 +76,7 @@ export const questionApi = {
   get: (questionId) => request.get(`/questions/${questionId}`),
 
   // 删除题目
-  delete: (questionId) => request.delete(`/questions/${questionId}`)
+  delete: (questionId, config) => request.delete(`/questions/${questionId}`, config)
 }
 
 // ==================== 题目导入 API ====================

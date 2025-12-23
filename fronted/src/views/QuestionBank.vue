@@ -354,7 +354,7 @@ const handleDelete = (question) => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await questionApi.delete(question.id)
+        await questionApi.delete(question.id, { params: { user_id: userId.value } })
         message.success('删除成功')
         loadQuestions()
       } catch (error) {

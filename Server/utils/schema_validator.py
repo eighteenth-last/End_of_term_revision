@@ -19,7 +19,7 @@ QUESTION_SCHEMA = {
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["single", "multiple", "judge", "fill"]
+                        "enum": ["single", "multiple", "judge", "fill", "major"]
                     },
                     "question": {"type": "string"},
                     "options": {
@@ -80,8 +80,8 @@ def normalize_question_data(question: Dict[str, Any]) -> Dict[str, Any]:
         if not question.get("options") or len(question["options"]) == 0:
             question["options"] = ["对", "错"]
     
-    # 确保填空题的选项为空列表
-    if question["type"] == "fill":
+    # 确保填空题和大型题的选项为空列表
+    if question["type"] in ["fill", "major"]:
         if not question.get("options"):
             question["options"] = []
     

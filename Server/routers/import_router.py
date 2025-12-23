@@ -52,24 +52,24 @@ async def import_from_file(
     if not subject:
         raise HTTPException(status_code=404, detail="科目不存在或无权访问")
     
-    # 保存上传的文件到临时目录
+    tmp_file_path = None
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
             content = await file.read()
             tmp_file.write(content)
             tmp_file_path = tmp_file.name
         
-        # 创建 AI 解析器
         parser = create_ai_parser(
             base_url=llm_config.base_url,
             api_key=llm_config.api_key,
             model_name=llm_config.model_name
         )
         
-        # 解析文件
         parsed_data = parser.parse_file_to_questions(tmp_file_path, subject.name)
         
-        # 批量创建题目（含去重）
+        if not parsed_data.get("questions"):
+            raise HTTPException(status_code=400, detail="AI未能从文件中解析出任何题目，请检查文件内容是否为清晰的试题文本或适当拆分后重试")
+        
         result = QuestionService.batch_create_questions(
             db=db,
             user_id=user_id,
@@ -78,8 +78,8 @@ async def import_from_file(
             skip_duplicates=True
         )
         
-        # 删除临时文件
-        os.unlink(tmp_file_path)
+        if tmp_file_path and os.path.exists(tmp_file_path):
+            os.unlink(tmp_file_path)
         
         message = f"成功导入 {result['created_count']} 道题目"
         if result['skipped_count'] > 0:
@@ -91,14 +91,19 @@ async def import_from_file(
             count=result['created_count']
         )
     
-    except Exception as e:
-        # 清理临时文件
-        if 'tmp_file_path' in locals():
+    except HTTPException:
+        if tmp_file_path and os.path.exists(tmp_file_path):
             try:
                 os.unlink(tmp_file_path)
             except:
                 pass
-        
+        raise
+    except Exception as e:
+        if tmp_file_path and os.path.exists(tmp_file_path):
+            try:
+                os.unlink(tmp_file_path)
+            except:
+                pass
         raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
 
 
@@ -225,17 +230,16 @@ def import_from_text(
         raise HTTPException(status_code=404, detail="科目不存在或无权访问")
     
     try:
-        # 创建 AI 解析器
         parser = create_ai_parser(
             base_url=llm_config.base_url,
             api_key=llm_config.api_key,
             model_name=llm_config.model_name
         )
         
-        # 解析文本
         parsed_data = parser.parse_text_to_questions(request.text, subject.name)
+        if not parsed_data.get("questions"):
+            raise HTTPException(status_code=400, detail="AI未能从文本中解析出任何题目，请确认文本包含清晰的题号、选项和答案信息")
         
-        # 批量创建题目（含去重）
         result = QuestionService.batch_create_questions(
             db=db,
             user_id=request.user_id,

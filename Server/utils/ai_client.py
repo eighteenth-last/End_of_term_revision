@@ -96,6 +96,35 @@ class AIClient:
             response_format={"type": "json_object"}
         )
     
+    def parse_structured_questions(self, structured_questions: list, subject: str) -> str:
+        """
+        解析预处理后的结构化题目为完整的题目 JSON
+        :param structured_questions: 预处理后的题目列表
+        :param subject: 科目名称
+        :return: JSON 字符串
+        """
+        from utils.Prompt import PARSE_STRUCTURED_QUESTIONS_PROMPT, SYSTEM_ROLE_PARSE_STRUCTURED
+        
+        # 将结构化题目转换为文本格式
+        import json
+        structured_data = json.dumps(structured_questions, ensure_ascii=False, indent=2)
+        
+        prompt = PARSE_STRUCTURED_QUESTIONS_PROMPT.format(
+            structured_data=structured_data,
+            subject=subject
+        )
+        
+        messages = [
+            {"role": "system", "content": SYSTEM_ROLE_PARSE_STRUCTURED},
+            {"role": "user", "content": prompt}
+        ]
+        
+        return self.chat_completion(
+            messages=messages,
+            temperature=0.3,
+            response_format={"type": "json_object"}
+        )
+    
     def parse_image_direct(self, image_path: str, subject: str) -> str:
         """
         直接使用视觉模型解析图片（不经过OCR）

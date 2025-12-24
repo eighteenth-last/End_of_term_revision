@@ -20,7 +20,7 @@
           <n-tab-pane name="file" tab="文件导入">
             <n-space vertical style="margin-top: 16px;">
               <n-alert type="info">
-                支持 PDF、Word、文本文件。AI 将自动识别题目、选项、答案和解析。
+                支持 PDF、Word、文本文件。AI 将自动识别题目、选项、答案和解析。<span style="color: red; font-weight: bold;">!!暂不建议使用!!</span>
               </n-alert>
               <n-upload
                 :custom-request="handleFileUpload"

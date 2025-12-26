@@ -5,6 +5,7 @@ AI 解析服务
 import json
 import re
 from typing import Dict, Any, List
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from services.file_reader import FileReader
 from utils.ai_client import AIClient
 from utils.schema_validator import parse_and_validate, normalize_question_data
@@ -115,19 +116,50 @@ class AIParser:
             segments = split_text_for_questions(text_content)
             print(f"[自动分段] 分段数量: {len(segments)}")
             merged_questions: List[Dict[str, Any]] = []
-            for idx, segment in enumerate(segments):
-                print(f"[自动分段] 第{idx + 1}段长度: {len(segment)} 字符")
-                segment_json = self.ai_client.parse_text_to_questions(segment, subject)
-                print(f"[AI解析-分段{idx + 1}] JSON长度: {len(segment_json)} 字符")
-                print(f"[AI解析-分段{idx + 1}预览] {segment_json[:500]}...")
-                segment_data = parse_and_validate(segment_json)
-                segment_questions = segment_data.get("questions") or []
-                print(f"[AI解析-分段{idx + 1}] questions数量: {len(segment_questions)}")
-                for q in segment_questions:
-                    normalize_question_data(q)
-                    merged_questions.append(q)
+
+            # 定义任务函数
+            def process_segment(idx, segment):
+                print(f"[自动分段] 开始处理第{idx + 1}段，长度: {len(segment)} 字符")
+                try:
+                    segment_json = self.ai_client.parse_text_to_questions(segment, subject)
+                    print(f"[AI解析-分段{idx + 1}] 完成，JSON长度: {len(segment_json)} 字符")
+                    
+                    segment_data = parse_and_validate(segment_json)
+                    segment_questions = segment_data.get("questions") or []
+                    print(f"[AI解析-分段{idx + 1}] 解析出 {len(segment_questions)} 道题目")
+                    
+                    for q in segment_questions:
+                        normalize_question_data(q)
+                    return segment_questions
+                except Exception as e:
+                    print(f"[AI解析警告-分段{idx + 1}] 解析失败: {str(e)}")
+                    return []
+
+            # 使用线程池并发执行
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_idx = {executor.submit(process_segment, i, seg): i for i, seg in enumerate(segments)}
+                
+                # 按顺序收集结果（虽然是并发执行，但我们希望保持题目顺序吗？
+                # 如果题目顺序重要，我们应该按原始索引排序结果。
+                # 这里我们先收集所有结果，然后按索引排序合并。
+                results = []
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    try:
+                        qs = future.result()
+                        results.append((idx, qs))
+                    except Exception as exc:
+                        print(f"[自动分段] 第{idx + 1}段发生未捕获异常: {exc}")
+            
+            # 按索引排序并合并
+            results.sort(key=lambda x: x[0])
+            for _, qs in results:
+                merged_questions.extend(qs)
+            
             print(f"[自动分段] 汇总questions数量: {len(merged_questions)}")
+            # 只要有解析出题目，就返回结果，不要因为部分失败而全盘否定
             if not merged_questions:
+                # 如果所有分段都失败了，才返回空
                 return {"subject": subject, "questions": []}
             return {"subject": subject, "questions": merged_questions}
         
@@ -154,9 +186,22 @@ class AIParser:
         questions = parsed_data.get("questions") or []
         print(f"[AI解析-图片] questions数量: {len(questions)}")
         if not questions:
-            print("[AI解析警告-图片] AI返回的questions数组为空")
+            print("[AI解析警告-图片] AI返回的questions数组为空，尝试 OCR + 文本解析模式")
             print(f"[AI解析-图片完整返回] {json_result}")
-        
+            
+            # 降级策略：先提取文本，再解析文本
+            try:
+                extracted_text = self.ai_client.extract_text_from_image(image_path)
+                print(f"[AI解析-OCR] 提取文本长度: {len(extracted_text)} 字符")
+                if len(extracted_text) > 10:
+                    print(f"[AI解析-OCR] 提取文本预览: {extracted_text[:200]}...")
+                    # 调用文本解析流程（复用已有的分段和预处理逻辑）
+                    return self.parse_text_to_questions(extracted_text, subject)
+                else:
+                    print("[AI解析-OCR] 提取的文本过短，无法解析")
+            except Exception as e:
+                print(f"[AI解析-OCR] 提取文本失败: {e}")
+
         for question in questions:
             normalize_question_data(question)
         
@@ -212,19 +257,46 @@ class AIParser:
             segments = split_text_for_questions(text)
             print(f"[自动分段] 分段数量: {len(segments)}")
             merged_questions: List[Dict[str, Any]] = []
-            for idx, segment in enumerate(segments):
-                print(f"[自动分段] 第{idx + 1}段长度: {len(segment)} 字符")
-                segment_json = self.ai_client.parse_text_to_questions(segment, subject)
-                print(f"[AI解析-分段{idx + 1}] JSON长度: {len(segment_json)} 字符")
-                print(f"[AI解析-分段{idx + 1}预览] {segment_json[:500]}...")
-                segment_data = parse_and_validate(segment_json)
-                segment_questions = segment_data.get("questions") or []
-                print(f"[AI解析-分段{idx + 1}] questions数量: {len(segment_questions)}")
-                for q in segment_questions:
-                    normalize_question_data(q)
-                    merged_questions.append(q)
+            
+            # 定义任务函数
+            def process_segment(idx, segment):
+                print(f"[自动分段] 开始处理第{idx + 1}段，长度: {len(segment)} 字符")
+                try:
+                    segment_json = self.ai_client.parse_text_to_questions(segment, subject)
+                    print(f"[AI解析-分段{idx + 1}] 完成，JSON长度: {len(segment_json)} 字符")
+                    
+                    segment_data = parse_and_validate(segment_json)
+                    segment_questions = segment_data.get("questions") or []
+                    print(f"[AI解析-分段{idx + 1}] 解析出 {len(segment_questions)} 道题目")
+                    
+                    for q in segment_questions:
+                        normalize_question_data(q)
+                    return segment_questions
+                except Exception as e:
+                    print(f"[AI解析警告-分段{idx + 1}] 解析失败: {str(e)}")
+                    return []
+
+            # 使用线程池并发执行
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_idx = {executor.submit(process_segment, i, seg): i for i, seg in enumerate(segments)}
+                results = []
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    try:
+                        qs = future.result()
+                        results.append((idx, qs))
+                    except Exception as exc:
+                        print(f"[自动分段] 第{idx + 1}段发生未捕获异常: {exc}")
+            
+            # 按索引排序并合并
+            results.sort(key=lambda x: x[0])
+            for _, qs in results:
+                merged_questions.extend(qs)
+            
             print(f"[自动分段] 汇总questions数量: {len(merged_questions)}")
+            # 只要有解析出题目，就返回结果，不要因为部分失败而全盘否定
             if not merged_questions:
+                # 如果所有分段都失败了，才返回空
                 return {"subject": subject, "questions": []}
             return {"subject": subject, "questions": merged_questions}
         

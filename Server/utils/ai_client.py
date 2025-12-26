@@ -193,7 +193,50 @@ class AIClient:
             {"role": "user", "content": prompt}
         ]
         
-        return self.chat_completion(messages=messages, temperature=0.7)
+        return self.chat_completion(
+            messages=messages,
+            temperature=0.7
+        )
+
+    def extract_text_from_image(self, image_path: str) -> str:
+        """
+        从图片中提取文本（OCR）
+        :param image_path: 图片路径
+        :return: 提取的文本
+        """
+        # 读取图片并编码为base64
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+            image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        # 获取图片格式
+        ext = image_path.lower().split('.')[-1]
+        mime_type = f"image/{ext if ext in ['png', 'jpeg', 'jpg', 'gif', 'webp'] else 'jpeg'}"
+        
+        prompt = "请将这张图片中的所有文字内容完整提取出来。如果有数学公式，请使用 LaTeX 格式。保持原有排版结构。不要包含任何解释性文字，只返回提取的文本内容。"
+        
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{mime_type};base64,{image_base64}"
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": prompt
+                    }
+                ]
+            }
+        ]
+        
+        return self.chat_completion(
+            messages=messages,
+            temperature=0.1 # 低温度以保证准确性
+        )
 
 
 def get_ai_client(base_url: str, api_key: str, model_name: str) -> AIClient:

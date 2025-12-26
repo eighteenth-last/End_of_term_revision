@@ -93,7 +93,7 @@ class Question(Base):
     type = Column(Enum(QuestionType), nullable=False, comment='题目类型')
     question = Column(Text, nullable=False, comment='题干内容')
     options_json = Column(JSON, nullable=True, comment='选项 JSON')
-    answer = Column(String(255), nullable=False, comment='正确答案')
+    answer = Column(Text, nullable=False, comment='正确答案')
     analysis = Column(Text, nullable=False, comment='解析')
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), comment='创建时间')
     # 移除is_major字段，统一用type区分
@@ -136,7 +136,7 @@ class PracticeRecord(Base):
     user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False, comment='用户 ID')
     subject_id = Column(BigInteger, ForeignKey('subjects.id'), nullable=False, comment='科目 ID')
     question_id = Column(BigInteger, ForeignKey('questions.id'), nullable=False, comment='题目 ID')
-    user_answer = Column(String(255), nullable=False, comment='用户作答')
+    user_answer = Column(Text, nullable=False, comment='用户作答')
     is_correct = Column(Integer, nullable=False, comment='是否正确 1=正确 0=错误')
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), comment='作答时间')
 
